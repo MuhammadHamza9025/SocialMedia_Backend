@@ -13,19 +13,19 @@ app.use('/images', express.static('upload/images'))
 
 const port = 9000;
 
-const storage = multer.diskStorage({
-    destination: 'upload/images', // Assuming 'uploads' is in the root of your project
-    filename: (req, file, cb) => {
-        return cb(null, `${file.originalname}_${Date.now()}${path.extname(file.originalname)}`)
-    }
-});
-const uploadfile = multer({ storage: storage });
-app.post('/upload', uploadfile.single('image'), (req, res) => {
-    res.json({
-        success: 1,
-        image_url: `http://localhost:${port}/images/${req.file.filename}`
-    });
-});
+// const storage = multer.diskStorage({
+//     destination: 'upload/images', // Assuming 'uploads' is in the root of your project
+//     filename: (req, file, cb) => {
+//         return cb(null, `${file.originalname}_${Date.now()}${path.extname(file.originalname)}`)
+//     }
+// });
+// const uploadfile = multer({ storage: storage });
+// app.post('/upload', uploadfile.single('image'), (req, res) => {
+//     res.json({
+//         success: 1,
+//         image_url: `http://localhost:${port}/images/${req.file.filename}`
+//     });
+// });
 
 app.use(cors())
 app.use(express.json())
