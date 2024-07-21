@@ -6,7 +6,7 @@ const Users = require('./Models/models')
 const Posts = require('./Models/Post')
 const jwt = require("jsonwebtoken")
 const path = require('path')
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const cookieParser = require('cookie-parser');
 const multer = require('multer')
 app.use('/images', express.static('upload/images'))

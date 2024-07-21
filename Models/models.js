@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const Validator = require("Validator")
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 
 
 
