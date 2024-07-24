@@ -10,8 +10,11 @@ const bcrypt = require('bcryptjs');
 const cookieParser = require('cookie-parser');
 const multer = require('multer')
 app.use('/images', express.static('upload/images'))
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+require('dotenv').config()
 
-const port = 9000;
+
 
 // const storage = multer.diskStorage({
 //     destination: 'upload/images', // Assuming 'uploads' is in the root of your project
@@ -19,13 +22,7 @@ const port = 9000;
 //         return cb(null, `${file.originalname}_${Date.now()}${path.extname(file.originalname)}`)
 //     }
 // });
-// const uploadfile = multer({ storage: storage });
-// app.post('/upload', uploadfile.single('image'), (req, res) => {
-//     res.json({
-//         success: 1,
-//         image_url: `http://localhost:${port}/images/${req.file.filename}`
-//     });
-// });
+
 
 app.use(cors())
 app.use(express.json())
@@ -34,9 +31,34 @@ app.use(express.urlencoded({ extended: false }))
 
 
 // mongoose.connect('mongodb://127.0.0.1:27017/Authentication')
-mongoose.connect("mongodb+srv://Hamza:2vFfwKwATPXWmJy8@social.0drhd5s.mongodb.net/Authentication")
-    .then(console.log('Databse craeted')).catch((err) => console.log(err))
+mongoose.connect(`${process.env.DATABASE_URL}`).then(console.log('Databse craeted')).catch((err) => console.log(err))
 
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,           // Replace with your actual Cloudinary cloud name
+    api_key: process.env.API_KEY,       // Replace with your actual Cloudinary API key
+    api_secret: process.env.API_SECRETKEY // Replace with your actual Cloudinary API secret
+});
+
+// Configure Cloudinary Storage for Multer
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: async (req, file) => {
+        if (!file.mimetype.startsWith('image/')) {
+            throw new Error('File is not an image');
+        }
+        return {
+            folder: 'all_images',
+            public_id: file.originalname.split('.')[0],
+            format: file.originalname.split('.').pop()
+        };
+    },
+});
+const uploadfile = multer({ storage: storage });
+app.post('/upload', uploadfile.single('image'), (req, res) => {
+    const imageUrl = req.file.path
+    console.log(imageUrl)
+    res.json({ imageUrl })
+});
 
 
 app.post('/signup', async (req, res) => {
@@ -70,7 +92,7 @@ app.post('/signup', async (req, res) => {
 
             //Geenerating a Web Token for Verificatio
             const data = { id: database.id }
-            const token = jwt.sign(data, 'hamzahamzahamza')
+            const token = jwt.sign(data, process.env.SECRET_KEY)
 
         }
     }
@@ -94,7 +116,7 @@ app.post('/login', async (req, res) => {
         if (truepwd) {
             const data = { get_email: { _id: get_email._id } }
 
-            const token = jwt.sign(data, 'hamzahamzahamza')
+            const token = jwt.sign(data, process.env.SECRET_KEY)
 
             // secure: true, // Ensure cookie is only transmitted over HTTPS
 
@@ -124,7 +146,7 @@ const usermiddleware = async (req, res, next) => {
     }
     else {
 
-        const data = jwt.verify(token, 'hamzahamzahamza')
+        const data = jwt.verify(token, process.env.SECRET_KEY)
 
 
 
@@ -147,23 +169,24 @@ app.get('/login', usermiddleware, async (req, res) => {
 
 })
 
-// app.post('/post', uploadfile.single('image'), usermiddleware, async (req, res) => {
-//     const { title, desc, image } = req.body
-//     console.log(title, desc)
-//     const post = new Posts({
-//         title,
-//         desc,
-//         image: `http://localhost:${port}/images/${req.file.filename}`,
-//         postedby: req.get_email._id,
-//         likedby: [],
-//         comment: []
+app.post('/post', uploadfile.single('image'), usermiddleware, async (req, res) => {
+    const { title, desc, image } = req.body
+    const imageUrl = req.file.path;
 
-//     })
-//     post.save()
-//     const getall = await Posts.find()
-//     res.json(getall)
+    const post = new Posts({
+        title,
+        desc,
+        image: imageUrl,
+        postedby: req.get_email._id,
+        likedby: [],
+        comment: []
 
-// })
+    })
+    post.save()
+    const getall = await Posts.find()
+    res.json(getall)
+
+})
 
 
 app.get('/mypost', usermiddleware, async (req, res) => {
@@ -362,5 +385,5 @@ app.post('/deleteposts', usermiddleware, async (req, res) => {
 
 
 
-app.listen(port, () => console.log("running of port 9000"))
+app.listen(process.env.PORT || 9000, () => console.log("running of port 9000"))
 
