@@ -274,22 +274,24 @@ app.post('/otherusers', usermiddleware, async (req, res) => {
 
 
 // ------------------------------------------------------------------------------------------
-// app.post('/profileedit', uploadfile.single('image'), usermiddleware, async (req, res) => {
-//     try {
-//         const edit = await Users.findByIdAndUpdate(
-//             req.get_email._id, // Assuming _id is a string or ObjectId
-//             { image: `http://localhost:${port}/images/${req.file.filename}` },
-//             { new: true }
-//         );
-//         res.send('Profile image updated successfully');
-//     } catch (error) {
-//         res.status(500).send('Error updating profile image');
-//     }
-// });
-// // ------------------------------------------------------------
-// app.post('/interests', usermiddleware, async (req, res) => {
-//     const edit_int = await Users.findByIdAndUpdate({ _id: req.get_email._id }, { $push: { interests: req.body.interests } }, { new: true })
-// })
+app.post('/profileedit', uploadfile.single('image'), usermiddleware, async (req, res) => {
+
+    const imageUrl = req.file.path
+    try {
+        const edit = await Users.findByIdAndUpdate(
+            req.get_email._id, // Assuming _id is a string or ObjectId
+            { image: imageUrl },
+            { new: true }
+        );
+        res.send('Profile image updated successfully');
+    } catch (error) {
+        res.status(500).send('Error updating profile image');
+    }
+});
+// ------------------------------------------------------------
+app.post('/interests', usermiddleware, async (req, res) => {
+    const edit_int = await Users.findByIdAndUpdate({ _id: req.get_email._id }, { $push: { interests: req.body.interests } }, { new: true })
+})
 
 
 
